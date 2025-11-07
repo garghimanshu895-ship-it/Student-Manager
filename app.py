@@ -1,51 +1,77 @@
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
 import streamlit as st
+from bson import ObjectId
+st.sidebar.title("Navigation")
 
-st.title("Enter Data")
 
-name = st.text_input("Enter Name : ")
-
-dept = st.text_input("Enter Department : ")
-
-# MongoDB connection URI
 uri = "mongodb+srv://admin:user123@cluster0.ntr7sqq.mongodb.net/?appName=Cluster0"
-
 client = MongoClient(uri, server_api=ServerApi('1'))
 
 try:
     db = client['StudentManagementSystemDB']
     collection = db['students']
 
-    # ✅ Insert data
-    if st.button("Submit"):
-        if name and dept:
-            data = {"name": name.strip(), "dept": dept.strip()}
-            collection.insert_one(data)
-            st.success("✅ Data inserted successfully!")
-        else:
-            st.warning("⚠️ Please fill in all fields before submitting.")
+    
+    dic=[]
+    # Initialize session_state keys if not present
+    if "mode" not in st.session_state:
+        st.session_state.mode = None  # can be "add" or "show"
 
-    # ✅ Search and Display Data
-    dic = []
+    # Buttons to set the mode
+    if st.sidebar.button("Add"):
+        st.session_state.mode = "add"
+    if st.sidebar.button("Show"):
+        st.session_state.mode = "show"
+    if st.sidebar.button("Delete"):
+        st.session_state.mode = "Delete"
+    # ✅ ADD DATA SECTION
+    if st.session_state.mode == "add":
+        with st.container():
+            st.title("Enter Data")
+            name = st.text_input("Enter Name : ")
+            dept = st.text_input("Enter Department : ")
+            if st.button("Submit"):
+                if name and dept:
+                    data = {"name": name.strip(), "dept": dept.strip()}
+                    collection.insert_one(data)
+                    st.success("✅ Data inserted successfully!")
+                else:
+                    st.warning("⚠️ Please fill in all fields before submitting.")
 
-    search = st.text_input("", placeholder="Search by name...")
-    if search != "":
-        for student in collection.find():
-            if search in student['name']:
-                student.pop('_id', None)
-                dic.append(student)
-     
-    else:
-        for student in collection.find():
-            student.pop('_id', None)
-            dic.append(student)
-    st.table(dic)
+    # ✅ SHOW DATA SECTION
+    elif st.session_state.mode == "show":
+        with st.container():
+            
+            search = st.text_input("", placeholder="Search by name...")
+            if search != "":
+                for student in collection.find():
+                    if search.lower() in student['name'].lower():
+                        
+                        dic.append(student)
+            else:
+                for student in collection.find():
+                    
+                    dic.append(student)
 
-    # Optional: print to console for debugging
-    print("📄 Documents in 'students' collection:")
-    for doc in collection.find():
-        print(doc)
+            if dic:
+                st.dataframe(dic)
+            else:
+                st.info("No matching records found.")
+
+    elif st.session_state.mode == "Delete":
+        with st.container():
+            del_id=st.text_input("",placeholder="Enter id to delete...")
+            if st.button("Delete"):
+                if del_id.strip()!="":
+                    collection.delete_one({"_id":ObjectId(del_id)})
+                    
+                else:
+                    st.warning("Please Enter Id")
+
+
+
+
 
 except Exception as e:
     st.error(f"❌ Error connecting to MongoDB: {e}")
