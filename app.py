@@ -16,7 +16,7 @@ try:
     dic=[]
     # Initialize session_state keys if not present
     if "mode" not in st.session_state:
-        st.session_state.mode = None  # can be "add" or "show"
+        st.session_state.mode = "show  # can be "add" or "show"
 
     # Buttons to set the mode
     if st.sidebar.button("Add"):
