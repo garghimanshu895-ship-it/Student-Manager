@@ -25,6 +25,9 @@ try:
         st.session_state.mode = "show"
     if st.sidebar.button("Delete"):
         st.session_state.mode = "Delete"
+    if st.sidebar.button("Update"):
+        st.session_state.mode="Update"
+
     # ✅ ADD DATA SECTION
     if st.session_state.mode == "add":
         with st.container():
@@ -69,6 +72,19 @@ try:
                 else:
                     st.warning("Please Enter Id")
 
+    elif st.session_state.mode == "Update":
+        with st.container():
+            Update_id = st.text_input("", placeholder="Enter ID to update...")
+            new_name = st.text_input("Enter new name:")
+            new_dept = st.text_input("Enter new department:")
+
+            if st.button("Update"):
+                if Update_id.strip() != "":
+                    collection.update_one({"_id": ObjectId(Update_id)}, {"$set": {"name": new_name, "dept": new_dept}})
+                    st.success("✅ Data updated successfully!")
+
+                else:
+                    st.warning("Please enter a valid id to update.")
 
 
 
